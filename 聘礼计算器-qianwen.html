@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聘礼综合计算器</title>
+    <style>
+        :root {
+            --primary-color: #e74c3c;
+            --secondary-color: #3498db;
+            --bg-color: #f9f9f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h2 {
+            text-align: center;
+            color: var(--primary-color);
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        label {
+            flex: 1;
+            font-weight: 600;
+        }
+        input[type="number"], select {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: right;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #c0392b;
+        }
+        .result-box {
+            margin-top: 25px;
+            padding: 20px;
+            background-color: #fdf2f2;
+            border-left: 5px solid var(--primary-color);
+            border-radius: 4px;
+            display: none;
+        }
+        .result-box h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            border-bottom: 1px dashed #ddd;
+            padding-bottom: 5px;
+        }
+        .highlight {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>💍 聘礼综合计算器</h2>
+    
+    <div class="form-group">
+        <label for="spouseIncome">配偶年收入 (万元)</label>
+        <input type="number" id="spouseIncome" value="15" min="0" step="0.1">
+    </div>
+
+    <div class="form-group">
+        <label for="salaryRatio">工资给付比例 (%)</label>
+        <input type="number" id="salaryRatio" value="50" min="0" max="100">
+    </div>
+
+    <div class="form-group">
+        <label>是否做家务</label>
+        <div class="checkbox-group">
+            <input type="checkbox" id="doHousework" checked onchange="toggleHousework()">
+            <span id="houseworkStatus">是</span>
+        </div>
+    </div>
+
+    <div class="form-group" id="houseworkValueGroup">
+        <label for="houseworkValue">做家务每天价值 (元)</label>
+        <input type="number" id="houseworkValue" value="150" min="0">
+    </div>
+
+    <div class="form-group">
+        <label for="divorceProb">5年内离婚概率 (%)</label>
+        <input type="number" id="divorceProb" value="20" min="0" max="100">
+    </div>
+
+    <button onclick="calculate()">计算建议聘礼</button>
+
+    <div class="result-box" id="resultBox">
+        <h3>📊 计算结果分析</h3>
+        <div class="result-item">
+            <span>基础收入贡献聘礼：</span>
+            <span id="resIncome">0 万元</span>
+        </div>
+        <div class="result-item">
+            <span>家务劳动补偿估值：</span>
+            <span id="resHousework">0 万元</span>
+        </div>
+        <div class="result-item">
+            <span>婚姻风险折损系数：</span>
+            <span id="resRisk">0 %</span>
+        </div>
+        <hr>
+        <div class="result-item highlight">
+            <span>建议聘礼总额：</span>
+            <span id="resTotal">0 万元</span>
+        </div>
+        <p style="font-size: 0.85em; color: #777; margin-top: 15px;">
+            *注：本模型基于期望净收益与家务劳动补偿综合测算，仅供参考，婚姻幸福无法完全用金钱衡量。
+        </p>
+    </div>
+</div>
+
+<script>
+    function toggleHousework() {
+        const checkbox = document.getElementById('doHousework');
+        const status = document.getElementById('houseworkStatus');
+        const valueGroup = document.getElementById('houseworkValueGroup');
+        
+        if (checkbox.checked) {
+            status.innerText = "是";
+            valueGroup.style.opacity = "1";
+        } else {
+            status.innerText = "否";
+            valueGroup.style.opacity = "0.5";
+        }
+    }
+
+    function calculate() {
+        // 获取输入值
+        const income = parseFloat(document.getElementById('spouseIncome').value) || 0;
+        const ratio = parseFloat(document.getElementById('salaryRatio').value) || 0;
+        const doWork = document.getElementById('doHousework').checked;
+        const workValue = parseFloat(document.getElementById('houseworkValue').value) || 0;
+        const divorceProb = parseFloat(document.getElementById('divorceProb').value) || 0;
+
+        // 1. 基础收入贡献聘礼 = 配偶年收入 * 给付比例 * 3年 (假设基准年数)
+        const baseIncomeBridePrice = income * (ratio / 100) * 3;
+
+        // 2. 家务劳动补偿估值 (参考5年，每年365天)
+        let houseworkCompensation = 0;
+        if (doWork) {
+            houseworkCompensation = (workValue * 365 * 5) / 10000; // 转换为万元
+        }
+
+        // 3. 婚姻风险折损 (离婚概率越高，实际期望值越低，这里做一个简单的风险折损)
+        // 风险系数 = 1 - (离婚概率 * 0.5) 假设离婚会损失一半的期望价值
+        const riskFactor = 1 - (divorceProb / 100 * 0.5);
+
+        // 4. 综合计算
+        let totalBridePrice = (baseIncomeBridePrice + houseworkCompensation) * riskFactor;
+        
+        // 格式化输出
+        document.getElementById('resIncome').innerText = baseIncomeBridePrice.toFixed(2) + ' 万元';
+        document.getElementById('resHousework').innerText = houseworkCompensation.toFixed(2) + ' 万元';
+        document.getElementById('resRisk').innerText = (riskFactor * 100).toFixed(1) + ' %';
+        document.getElementById('resTotal').innerText = totalBridePrice.toFixed(2) + ' 万元';
+
+        // 显示结果框
+        document.getElementById('resultBox').style.display = 'block';
+    }
+</script>
+
+</body>
+</html>

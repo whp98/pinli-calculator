@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>聘礼计算器</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #e91e63;
+        }
+        label {
+            display: block;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background: #e91e63;
+            color: #fff;
+            border: none;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #d81b60;
+        }
+        .result {
+            margin-top: 25px;
+            padding: 15px;
+            background: #fce4ec;
+            border-radius: 8px;
+            font-size: 15px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>💍 聘礼计算器</h2>
+
+    <label>基础聘礼金额（元）</label>
+    <input type="number" id="basePrice" value="100000">
+
+    <label>配偶年收入（元）</label>
+    <input type="number" id="income" value="150000">
+
+    <label>工资用于家庭比例（%）</label>
+    <input type="number" id="salaryRatio" value="50">
+
+    <label>是否承担主要家务</label>
+    <select id="doHousework">
+        <option value="yes">是</option>
+        <option value="no">否</option>
+    </select>
+
+    <label>每天家务折算价值（元）</label>
+    <input type="number" id="houseworkValue" value="100">
+
+    <label>5 年内离婚概率（%）</label>
+    <input type="number" id="divorceRisk" value="20">
+
+    <button onclick="calculate()">计算聘礼</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+function calculate() {
+    const basePrice = parseFloat(document.getElementById("basePrice").value);
+    const income = parseFloat(document.getElementById("income").value);
+    const salaryRatio = parseFloat(document.getElementById("salaryRatio").value) / 100;
+    const doHousework = document.getElementById("doHousework").value;
+    const houseworkValue = parseFloat(document.getElementById("houseworkValue").value);
+    const divorceRisk = parseFloat(document.getElementById("divorceRisk").value) / 100;
+
+    // 配偶经济贡献（5年）
+    const economicContribution = income * salaryRatio * 5;
+
+    // 家务贡献（5年）
+    let houseworkContribution = 0;
+    if (doHousework === "yes") {
+        houseworkContribution = houseworkValue * 365 * 5;
+    }
+
+    // 风险修正系数（离婚概率越高，聘礼越高）
+    const riskFactor = 1 + divorceRisk;
+
+    // 最终聘礼
+    const adjustedPrice = (basePrice - economicContribution - houseworkContribution) * riskFactor;
+
+    const finalPrice = adjustedPrice > 0 ? adjustedPrice.toFixed(2) : 0;
+
+    document.getElementById("result").innerHTML = `
+        <strong>📊 计算结果：</strong><br>
+        配偶 5 年经济贡献：${economicContribution.toFixed(2)} 元<br>
+        配偶 5 年家务贡献：${houseworkContribution.toFixed(2)} 元<br>
+        离婚风险修正系数：${riskFactor.toFixed(2)}<br>
+        <strong>👉 建议聘礼金额：${finalPrice} 元</strong>
+    `;
+}
+</script>
+
+</body>
+</html>

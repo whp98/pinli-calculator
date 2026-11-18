@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聘礼计算器 · 幽默版</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(145deg, #fff0f5 0%, #f8e8e8 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .calculator-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-radius: 2.5rem;
+            box-shadow: 0 30px 45px -20px rgba(140, 0, 20, 0.3), 0 0 0 1px rgba(255, 200, 200, 0.5);
+            max-width: 760px;
+            width: 100%;
+            padding: 2rem 2rem 2.2rem;
+            transition: transform 0.2s;
+            border: 1px solid #ffd9d9;
+        }
+
+        .calculator-card:hover {
+            transform: scale(1.005);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-top: 0.2rem;
+            margin-bottom: 0.1rem;
+            color: #8b3a4a;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-left: 8px solid #d86c7a;
+            padding-left: 1.2rem;
+        }
+
+        h1 span {
+            font-size: 1.8rem;
+            background: #ffe3e8;
+            border-radius: 60px;
+            padding: 0.1rem 0.8rem;
+            color: #a13e4e;
+            font-weight: 500;
+        }
+
+        .subhead {
+            color: #aa6b73;
+            margin-top: 0.1rem;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            font-style: italic;
+            padding-left: 2rem;
+            border-bottom: 1px dashed #e9b6be;
+            padding-bottom: 0.75rem;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.4rem;
+        }
+
+        .input-item label {
+            font-weight: 600;
+            color: #5d3a40;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .input-item label .unit {
+            font-weight: 400;
+            color: #b1868e;
+            font-size: 0.8rem;
+            background: #fce9eb;
+            padding: 0.1rem 0.5rem;
+            border-radius: 30px;
+        }
+
+        .input-item input[type="number"] {
+            padding: 0.8rem 1rem;
+            border: 1.5px solid #f0c0c8;
+            border-radius: 40px;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: #2e1b1f;
+            background: white;
+            transition: 0.2s;
+            outline: none;
+            box-shadow: 0 4px 8px rgba(200, 120, 140, 0.05);
+        }
+
+        .input-item input[type="number"]:focus {
+            border-color: #c95c70;
+            box-shadow: 0 0 0 4px rgba(201, 92, 112, 0.15);
+        }
+
+        .input-item input[type="range"] {
+            margin-top: 0.3rem;
+            accent-color: #c95c70;
+            height: 8px;
+            border-radius: 10px;
+        }
+
+        .range-value {
+            font-weight: 600;
+            color: #8b3a4a;
+            background: #ffeef0;
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: #fff6f7;
+            padding: 0.9rem 1.2rem;
+            border-radius: 50px;
+            border: 1px solid #fad1d9;
+            transition: 0.1s;
+        }
+
+        .checkbox-row input[type="checkbox"] {
+            width: 1.5rem;
+            height: 1.5rem;
+            accent-color: #b84a5e;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .checkbox-row label {
+            font-weight: 600;
+            color: #5d3a40;
+            font-size: 1rem;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .dual-input {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
+        }
+
+        .dual-input input {
+            flex: 1;
+        }
+
+        /* 结果面板 */
+        .result-panel {
+            background: linear-gradient(135deg, #972b3f, #b84a5e);
+            border-radius: 2rem;
+            padding: 1.8rem 2rem;
+            margin-top: 1.5rem;
+            color: white;
+            box-shadow: 0 20px 30px -10px #b84a5e70;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #e7a6b2;
+        }
+
+        .result-label {
+            font-size: 1.2rem;
+            letter-spacing: 0.03em;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .result-amount {
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            gap: 0.2rem;
+            background: #ffffffee;
+            color: #972b3f;
+            padding: 0.2rem 1.5rem 0.2rem 1.8rem;
+            border-radius: 60px;
+            box-shadow: inset 0 -3px 0 #d99ba6;
+            letter-spacing: -0.02em;
+        }
+
+        .result-amount small {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #b84a5e;
+            margin-left: 0.2rem;
+        }
+
+        .detail-note {
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: #ffd7dd;
+            text-align: right;
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            background: #ffffff20;
+            border-radius: 40px;
+            padding: 0.15rem 0.8rem;
+            font-size: 0.8rem;
+            backdrop-filter: blur(5px);
+        }
+
+        .reset-btn {
+            background: none;
+            border: 1.5px solid #e9b6be;
+            color: #8b3a4a;
+            padding: 0.6rem 1.5rem;
+            border-radius: 60px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 1.2rem;
+            width: fit-content;
+        }
+
+        .reset-btn:hover {
+            background: #ffe3e8;
+            border-color: #c95c70;
+        }
+
+        .footnote {
+            color: #ba8e95;
+            font-size: 0.78rem;
+            margin-top: 1.5rem;
+            text-align: center;
+            border-top: 1px dashed #e9b6be;
+            padding-top: 1.2rem;
+        }
+
+        @media (max-width: 580px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .calculator-card {
+                padding: 1.5rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .result-amount {
+                font-size: 2.3rem;
+                padding: 0.2rem 1rem;
+            }
+            .result-panel {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator-card">
+        <h1>
+            💍 聘礼计算器
+            <span>幽默版</span>
+        </h1>
+        <div class="subhead">基于收入、家务与离婚概率的“诚意”估值</div>
+
+        <div class="input-grid" id="inputGrid">
+            <!-- 配偶年收入 -->
+            <div class="input-item">
+                <label>💰 配偶年收入 <span class="unit">万元</span></label>
+                <input type="number" id="income" value="20" min="0" step="1" placeholder="例如 20">
+            </div>
+
+            <!-- 工资给付比例 -->
+            <div class="input-item">
+                <label>📤 工资给付比例 <span class="unit">%</span></label>
+                <div class="dual-input">
+                    <input type="range" id="salaryRatioSlider" min="0" max="100" value="40" step="1">
+                    <span class="range-value" id="salaryRatioDisplay">40%</span>
+                </div>
+                <input type="number" id="salaryRatio" value="40" min="0" max="100" step="1" style="margin-top: 0.3rem; display: none;" readonly>
+            </div>
+
+            <!-- 是否做家务 + 家务价值 (组合块) -->
+            <div class="input-item" style="grid-column: span 2; display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                <div class="checkbox-row" style="margin: 0;">
+                    <input type="checkbox" id="doHousework" checked>
+                    <label for="doHousework">🧹 配偶做家务</label>
+                </div>
+                <div class="input-item" style="gap: 0.2rem;">
+                    <label>每天家务价值 <span class="unit">元/天</span></label>
+                    <input type="number" id="houseworkValue" value="120" min="0" step="10" placeholder="每天价值">
+                </div>
+            </div>
+
+            <!-- 5年内离婚概率 -->
+            <div class="input-item" style="grid-column: span 2;">
+                <label>💔 5年内离婚概率 <span class="unit">%</span></label>
+                <div class="dual-input">
+                    <input type="range" id="divorceProbSlider" min="0" max="100" value="15" step="1">
+                    <span class="range-value" id="divorceProbDisplay">15%</span>
+                </div>
+                <input type="number" id="divorceProb" value="15" min="0" max="100" step="1" style="margin-top: 0.3rem; display: none;" readonly>
+            </div>
+        </div>
+
+        <!-- 聘礼结果 -->
+        <div class="result-panel">
+            <div class="result-label">
+                <span>🧧 建议聘礼</span>
+            </div>
+            <div class="result-amount" id="betrothalAmount">
+                0 <small>万元</small>
+            </div>
+            <div class="detail-note" id="detailNote">
+                <!-- 动态细节由JS填充 -->
+            </div>
+        </div>
+
+        <!-- 重置按钮 -->
+        <button class="reset-btn" id="resetBtn">
+            🔄 重置默认值
+        </button>
+
+        <div class="footnote">
+            ⚖️ 纯粹娱乐，不构成任何婚恋建议。爱情无价，聘礼只是心意。
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // DOM 元素
+            const incomeInput = document.getElementById('income');
+            const salaryRatioSlider = document.getElementById('salaryRatioSlider');
+            const salaryRatioDisplay = document.getElementById('salaryRatioDisplay');
+            const salaryRatioHidden = document.getElementById('salaryRatio'); // 用于程序读取，数值与slider同步
+
+            const doHouseworkCheckbox = document.getElementById('doHousework');
+            const houseworkValueInput = document.getElementById('houseworkValue');
+
+            const divorceProbSlider = document.getElementById('divorceProbSlider');
+            const divorceProbDisplay = document.getElementById('divorceProbDisplay');
+            const divorceProbHidden = document.getElementById('divorceProb');
+
+            const betrothalAmountDiv = document.getElementById('betrothalAmount');
+            const detailNoteDiv = document.getElementById('detailNote');
+            const resetBtn = document.getElementById('resetBtn');
+
+            // 同步滑块与显示/隐藏数值
+            function syncSalaryRatio() {
+                const val = salaryRatioSlider.value;
+                salaryRatioDisplay.textContent = val + '%';
+                salaryRatioHidden.value = val;
+            }
+
+            function syncDivorceProb() {
+                const val = divorceProbSlider.value;
+                divorceProbDisplay.textContent = val + '%';
+                divorceProbHidden.value = val;
+            }
+
+            // 绑定滑块事件
+            salaryRatioSlider.addEventListener('input', function() {
+                syncSalaryRatio();
+                calculate();
+            });
+
+            divorceProbSlider.addEventListener('input', function() {
+                syncDivorceProb();
+                calculate();
+            });
+
+            // 绑定其他输入事件
+            incomeInput.addEventListener('input', calculate);
+            houseworkValueInput.addEventListener('input', calculate);
+            doHouseworkCheckbox.addEventListener('change', calculate);
+
+            // 重置所有字段到默认值
+            function resetToDefaults() {
+                incomeInput.value = 20;
+                salaryRatioSlider.value = 40;
+                syncSalaryRatio();
+
+                doHouseworkCheckbox.checked = true;
+                houseworkValueInput.value = 120;
+
+                divorceProbSlider.value = 15;
+                syncDivorceProb();
+
+                calculate();
+            }
+
+            // 核心计算函数
+            function calculate() {
+                // 1. 获取基本数值
+                const annualIncome = parseFloat(incomeInput.value) || 0;          // 万元
+                const salaryRatio = parseFloat(salaryRatioHidden.value) || 0;    // 百分比 0-100
+                const hasHousework = doHouseworkCheckbox.checked;
+                const dailyHouseworkValue = parseFloat(houseworkValueInput.value) || 0; // 元/天
+                const divorceProb = parseFloat(divorceProbHidden.value) || 0;    // 百分比 0-100
+
+                // 2. 计算工资给付部分 (单位: 万元)
+                // 年工资给付金额 = 年收入 * 比例
+                const annualSalaryContribution = annualIncome * (salaryRatio / 100); // 万元/年
+
+                // 3. 计算家务价值部分 (单位: 万元)
+                // 如果做家务，每天价值 * 365 天 / 10000 转换为万元
+                const annualHouseworkValue = hasHousework
+                    ? (dailyHouseworkValue * 365) / 10000
+                    : 0; // 万元/年
+
+                // 4. 基础年度贡献总和 (工资给付 + 家务价值) 万元/年
+                const baseAnnualContribution = annualSalaryContribution + annualHouseworkValue;
+
+                // 5. 5年总贡献 (未考虑离婚)
+                const fiveYearTotal = baseAnnualContribution * 5;
+
+                // 6. 应用离婚概率调整：离婚概率越高，聘礼估值越低（幽默逻辑：婚姻稳定性影响聘礼诚意）
+                //    采用线性衰减：离婚概率0% -> 全额；离婚概率100% -> 0
+                const stabilityFactor = 1 - (divorceProb / 100);
+                const adjustedFiveYearTotal = fiveYearTotal * stabilityFactor;
+
+                // 7. 最终聘礼：为了有个“合理”范围，取调整后总值的 30% ~ 50% ? 
+                //    直接使用 adjustedFiveYearTotal 可能会很大，所以我们取一个系数 0.3 (幽默，聘礼通常是表示)
+                //    但为了数据看起来有趣，我们取 0.35 作为聘礼系数，同时保留2位小数。
+                const betrothalCoefficient = 0.35;
+                let finalAmount = adjustedFiveYearTotal * betrothalCoefficient;
+
+                // 防止负数 (离婚概率不会导致负数，但保险)
+                finalAmount = Math.max(0, finalAmount);
+
+                // 8. 格式化结果
+                const roundedAmount = Math.round(finalAmount * 100) / 100;
+
+                // 显示金额，保留两位小数 (如果整数则显示整数)
+                const displayAmount = Number.isInteger(roundedAmount) ? roundedAmount : roundedAmount.toFixed(2);
+                betrothalAmountDiv.innerHTML = `${displayAmount} <small>万元</small>`;
+
+                // 9. 构建细节说明 (显示各项贡献)
+                const salaryContributionRounded = (annualSalaryContribution * 5 * stabilityFactor * betrothalCoefficient).toFixed(2);
+                const houseworkContributionRounded = (annualHouseworkValue * 5 * stabilityFactor * betrothalCoefficient).toFixed(2);
+
+                // 额外展示离婚系数和基础值，增加透明度
+                let houseworkText = hasHousework ? '做家务' : '不做家务';
+
+                detailNoteDiv.innerHTML = `
+                    <span class="badge">💼 工资贡献: ${salaryContributionRounded} 万</span>
+                    <span class="badge">🧽 家务贡献: ${houseworkContributionRounded} 万</span>
+                    <span class="badge">📉 稳定性系数: ${(stabilityFactor * 100).toFixed(0)}%</span>
+                `;
+            }
+
+            // 页面加载时初始化同步、计算
+            window.addEventListener('load', function() {
+                syncSalaryRatio();
+                syncDivorceProb();
+                calculate();
+
+                // 额外处理：如果用户直接在隐藏数字输入框修改(虽然隐藏了，但保留以防万一)
+                // 不过我们不用隐藏输入框作为输入源，但是为了视觉，其实可以直接用滑块值
+            });
+
+            // 重置按钮监听
+            resetBtn.addEventListener('click', resetToDefaults);
+
+            // 当输入框数字变化时，也重新计算（已经绑定）
+
+            // 注意：percentage数字框隐藏了，用户只能用滑块，但我们同步了 hidden 值
+            // 为了健壮性，对于工资比例和离婚概率，如果用户通过其他方式（比如开发者工具）修改了隐藏输入，也同步滑块？
+            // 但没必要。就这样保持。
+
+            // 补充：当输入框为空或者非法时，我们按照0计算，但是让输入框保留原样并不好，所以改为blur时重置为合理值？
+            // 简单处理：输入框的input事件将计算，但parseFloat可能得到NaN，我们用了||0 处理。
+
+            // 但要注意，如果用户清空，可能会短暂显示0，可以接受。
+
+            // 但是收入输入框如果清空会变成0，我们可以加一个blur事件使得如果为空则设置默认0？但不需要。
+
+            // 为了使金额更平滑，我们也可以加个微调：如果收入为负，设为0？通过min="0"已经限制。
+
+            // 页面加载后我们还可以加一个初始的同步，已经做了。
+
+            // 还有一点：在输入过程中，salaryRatioSlider和divorceProbSlider的隐藏input已经通过sync函数更新，
+            // 并且我们通过calculate读取的是隐藏input，没问题。
+
+            // 另外当直接操作滑块时，也触发calculate了 (在事件里调用了)。
+
+            // 完美。
+
+            // 附加：如果做家务的勾选框取消，家务价值输入框可以保留，但计算时不加入，已经实现。
+        })();
+    </script>
+</body>
+</html>
