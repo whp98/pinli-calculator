@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>聘礼计算器</title>
+<style>
+:root{--bg:#f2f0ec;--card:#fbfaf8;--ink:#1d1a1a;--mute:#6f6862;--line:#ddd8d0;--red:#b3202a;--redbg:#f6e3e2;--gold:#a87a2c;--jade:#2f6b5c;--field:#fff;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171515;--card:#201d1d;--ink:#efeae4;--mute:#a39b93;--line:#38322f;--red:#ec6a70;--redbg:#3a2224;--gold:#d8ac5c;--jade:#6cc0aa;--field:#2a2626;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171515;--card:#201d1d;--ink:#efeae4;--mute:#a39b93;--line:#38322f;--red:#ec6a70;--redbg:#3a2224;--gold:#d8ac5c;--jade:#6cc0aa;--field:#2a2626;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:28px 18px 48px}
+h1{font:700 28px/1.2 "Songti SC","Noto Serif SC","STSong",serif;margin:0 0 6px;letter-spacing:.08em}
+.sub{color:var(--mute);margin:0 0 24px}
+.grid{display:grid;grid-template-columns:1fr;gap:20px}
+@media(min-width:820px){.grid{grid-template-columns:1.1fr .9fr;align-items:start}.slip{position:sticky;top:20px}}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:6px 18px 10px}
+.row{padding:14px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border-bottom:0}
+.row label,.row .lab{display:flex;justify-content:space-between;gap:10px;font-weight:600;margin-bottom:6px}
+.row .lab output{color:var(--red);font-variant-numeric:tabular-nums}
+.hint{color:var(--mute);font-size:13px;margin:4px 0 0}
+input[type=number]{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:var(--field);color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--red)}
+input:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sw{display:flex;align-items:center;gap:10px;cursor:pointer}
+.sw input{width:20px;height:20px;accent-color:var(--red)}
+.slip{background:var(--card);border:1px solid var(--line);border-top:6px solid var(--red);border-radius:0 0 6px 6px;padding:20px 20px 16px}
+.slip h2{margin:0;font:600 15px "Songti SC","Noto Serif SC",serif;color:var(--mute)}
+.big{font:700 clamp(38px,9vw,54px)/1.1 "Songti SC","Noto Serif SC","STSong",serif;color:var(--red);margin:6px 0 2px;font-variant-numeric:tabular-nums}
+.note{color:var(--mute);margin:0 0 16px}
+.bar{display:flex;height:14px;border-radius:2px;overflow:hidden;background:var(--line);margin:14px 0 10px}
+.bar i{display:block;height:100%;transition:width .25s}
+.leg{list-style:none;margin:0;padding:0}
+.leg li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.leg li:last-child{border-bottom:0}
+.dot{display:inline-block;width:10px;height:10px;margin-right:8px;border-radius:2px}
+.verdict{margin:14px 0 0;padding:10px 12px;background:var(--redbg);border-radius:4px}
+.fine{color:var(--mute);font-size:12.5px;margin:14px 0 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>聘礼计算器</h1>
+<p class="sub">把工资、家务和离婚风险折算成现值，估一个“理论聘礼”。仅供娱乐。</p>
+<div class="grid">
+<div class="panel">
+ <div class="row"><label for="inc">配偶月收入（元）</label><input id="inc" type="number" min="0" step="500" value="20000"></div>
+ <div class="row"><div class="lab"><span>工资给付比例</span><output id="o_ratio"></output></div><input id="ratio" type="range" min="0" max="100" value="50"><p class="hint">月收入中上交共同家庭的部分</p></div>
+ <div class="row"><label class="sw"><input id="chk" type="checkbox" checked><span style="font-weight:600">配偶承担家务</span></label>
+  <div class="two" style="margin-top:10px"><div><span class="hint">每天价值（元）</span><input id="cv" type="number" min="0" step="10" value="80"></div><div><span class="hint">每周做几天</span><input id="cd" type="number" min="0" max="7" step="1" value="5"></div></div></div>
+ <div class="row"><div class="lab"><span>5 年内离婚概率</span><output id="o_p"></output></div><input id="p" type="range" min="0" max="100" value="10"><p class="hint">假设离婚在前 5 年内均匀发生</p></div>
+ <div class="row"><div class="two">
+  <div><span class="hint">5 年后每年离婚率（%）</span><input id="h" type="number" min="0" max="50" step="0.5" value="1"></div>
+  <div><span class="hint">共同生活年限（年）</span><input id="yrs" type="number" min="1" max="70" step="1" value="30"></div>
+  <div><span class="hint">收入年增长率（%）</span><input id="g" type="number" min="-10" max="30" step="0.5" value="3"></div>
+  <div><span class="hint">折现率（%）</span><input id="r" type="number" min="0" max="30" step="0.5" value="3"></div>
+ </div></div>
+ <div class="row"><label for="dw">嫁妆 / 回礼（元）</label><input id="dw" type="number" min="0" step="1000" value="0"><p class="hint">会从聘礼中抵扣</p></div>
+</div>
+<aside class="slip" aria-live="polite">
+ <h2>建议聘礼</h2>
+ <div class="big" id="net">—</div>
+ <p class="note" id="mult"></p>
+ <div class="bar"><i id="b1" style="background:var(--red)"></i><i id="b2" style="background:var(--jade)"></i><i id="b3" style="background:var(--gold)"></i></div>
+ <ul class="leg">
+  <li><span><span class="dot" style="background:var(--red)"></span>工资贡献（折现后）</span><b id="vw"></b></li>
+  <li><span><span class="dot" style="background:var(--jade)"></span>家务价值（折现后）</span><b id="vc"></b></li>
+  <li><span><span class="dot" style="background:var(--gold)"></span>离婚风险折损</span><b id="vr"></b></li>
+  <li><span>前 5 年期望价值</span><b id="v5"></b></li>
+  <li><span>婚姻延续到 5 年后的概率</span><b id="sv"></b></li>
+ </ul>
+ <p class="verdict" id="vd"></p>
+ <p class="fine">模型：每年贡献 = 工资×给付比例 + 家务日价值×每周天数×52，按增长率逐年递增，再乘以当年婚姻存续概率并折现。现实中的彩礼取决于地方习俗与双方协商，别把结果当真。</p>
+</aside>
+</div>
+</div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+var v=function(i){var x=parseFloat($(i).value);return isNaN(x)?0:x};
+var fmt=function(n){n=Math.round(n);if(Math.abs(n)>=1e8)return (n/1e8).toFixed(2)+" 亿元";if(Math.abs(n)>=1e4)return (n/1e4).toFixed(1)+" 万元";return n.toLocaleString("zh-CN")+" 元"};
+function calc(){
+ var inc=v("inc"),ratio=v("ratio")/100,p=v("p")/100,h=v("h")/100,T=Math.max(1,Math.floor(v("yrs"))),g=v("g")/100,r=v("r")/100,dw=v("dw");
+ var on=$("chk").checked,cd=Math.min(7,Math.max(0,v("cd")));
+ $("o_ratio").textContent=Math.round(ratio*100)+"%";$("o_p").textContent=Math.round(p*100)+"%";
+ var wage0=inc*12*ratio,chore0=on?v("cv")*cd*52:0;
+ var prev=1,pvW=0,pvC=0,free=0,pv5=0,s5=1-p;
+ for(var t=1;t<=T;t++){
+  var cur=t<=5?1-p*t/5:prev*(1-h);
+  var w=(prev+cur)/2,f=Math.pow(1+g,t-1)/Math.pow(1+r,t);
+  pvW+=wage0*f*w;pvC+=chore0*f*w;free+=(wage0+chore0)*f;
+  if(t<=5)pv5+=(wage0+chore0)*f*w;
+  prev=cur;
+ }
+ var total=pvW+pvC,loss=Math.max(0,free-total),net=Math.max(0,total-dw);
+ $("net").textContent=fmt(net);
+ var yi=inc*12;
+ $("mult").textContent=yi>0?"约为配偶 "+(net/yi).toFixed(1)+" 年收入":"请填写配偶收入";
+ var d=free||1;
+ $("b1").style.width=(pvW/d*100)+"%";$("b2").style.width=(pvC/d*100)+"%";$("b3").style.width=(loss/d*100)+"%";
+ $("vw").textContent=fmt(pvW);$("vc").textContent=fmt(pvC);$("vr").textContent="−"+fmt(loss);
+ $("v5").textContent=fmt(pv5);$("sv").textContent=(s5*100).toFixed(0)+"%";
+ var m=yi>0?net/yi:0,msg;
+ if(net<=0)msg=dw>0&&total>0?"嫁妆已经覆盖了聘礼，这一单基本平账。":"没有可折算的贡献，聘礼为零。";
+ else if(p>=.4)msg="离婚风险偏高，折损已经很大，建议先把婚前沟通做足。";
+ else if(m<1)msg="低于一年收入，属于“心意到了”的区间。";
+ else if(m<3)msg="1 到 3 年收入，是比较常见的谈判区间。";
+ else msg="超过 3 年收入，对方压力不小，可以和家人一起再商量。";
+ if(on&&pvC>pvW&&net>0)msg="家务价值已经超过工资贡献，别忘了它也是实实在在的付出。";
+ $("vd").textContent=msg;
+}
+Array.prototype.forEach.call(document.querySelectorAll("input"),function(e){e.addEventListener("input",calc)});
+calc();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1631 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>聘礼（彩礼）价值与经济账精算计算器</title>
+  <style>
+    /* ==========================================================================
+       设计令牌与全局主题变量 (支持现代简洁卡片风格与细腻的视觉层次)
+       ========================================================================== */
+    :root {
+      --bg-page: #f4f6f9;
+      --bg-card: #ffffff;
+      --bg-subtle: #f8fafc;
+      --bg-accent-soft: #fff1f2;
+      --bg-indigo-soft: #eef2ff;
+      --bg-emerald-soft: #ecfdf5;
+      --bg-amber-soft: #fffbeb;
+
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #94a3b8;
+
+      --brand-rose: #e11d48;
+      --brand-rose-hover: #be123c;
+      --brand-indigo: #4f46e5;
+      --brand-emerald: #10b981;
+      --brand-amber: #f59e0b;
+
+      --border-light: #e2e8f0;
+      --border-focus: #fb7185;
+
+      --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+      --shadow-lg: 0 10px 25px -5px rgba(15, 23, 42, 0.07), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --transition-fast: 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", Roboto, sans-serif;
+      background-color: var(--bg-page);
+      color: var(--text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 48px;
+    }
+
+    /* ==========================================================================
+       顶部导航与标题区
+       ========================================================================== */
+    .header-banner {
+      background: linear-gradient(135deg, #1e1b4b 0%, #31102f 55%, #4c0519 100%);
+      color: #ffffff;
+      padding: 32px 20px 64px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-banner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 20%, rgba(244, 63, 94, 0.25), transparent 50%),
+                  radial-gradient(circle at 20% 80%, rgba(99, 102, 241, 0.22), transparent 50%);
+      pointer-events: none;
+    }
+
+    .header-content {
+      max-width: 1120px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .badge-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+      color: #fecdd3;
+    }
+
+    .header-title {
+      font-size: clamp(24px, 4vw, 34px);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .header-subtitle {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.78);
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* ==========================================================================
+       主容器与响应式双栏布局
+       ========================================================================== */
+    .main-container {
+      max-width: 1180px;
+      margin: -36px auto 0;
+      padding: 0 16px;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* 预设场景栏 */
+    .preset-bar {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      padding: 14px 20px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-light);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .preset-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preset-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .preset-btn {
+      appearance: none;
+      border: 1px solid var(--border-light);
+      background: var(--bg-subtle);
+      color: var(--text-primary);
+      padding: 7px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .preset-btn:hover {
+      border-color: var(--brand-rose);
+      background: var(--bg-accent-soft);
+      color: var(--brand-rose);
+      transform: translateY(-1px);
+    }
+
+    .preset-btn.active {
+      background: var(--brand-rose);
+      border-color: var(--brand-rose);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(225, 29, 72, 0.3);
+    }
+
+    /* 网格布局：左侧参数控制，右侧看板与图表 */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 960px) {
+      .dashboard-grid {
+        grid-template-columns: 430px 1fr;
+        align-items: start;
+      }
+    }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border-light);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+    }
+
+    /* ==========================================================================
+       表单输入控件与滑动条美化
+       ========================================================================== */
+    .control-group {
+      margin-bottom: 20px;
+      transition: opacity var(--transition-fast);
+    }
+
+    .control-group.disabled-state {
+      opacity: 0.55;
+    }
+
+    .control-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 10px;
+    }
+
+    .control-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .control-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .number-input-wrap {
+      display: inline-flex;
+      align-items: center;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 4px 10px;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .number-input-wrap:focus-within {
+      border-color: var(--brand-rose);
+      box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.12);
+      background: #ffffff;
+    }
+
+    .number-input {
+      width: 78px;
+      border: none;
+      background: transparent;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      outline: none;
+    }
+
+    .number-input:disabled {
+      cursor: not-allowed;
+      color: var(--text-muted);
+    }
+
+    .input-unit {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-left: 4px;
+      user-select: none;
+    }
+
+    /* 自定义原生 Range 滑动条 */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 999px;
+      background: #e2e8f0;
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 3px solid var(--brand-rose);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.18);
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      box-shadow: 0 0 0 5px rgba(225, 29, 72, 0.15);
+    }
+
+    input[type="range"]:disabled {
+      cursor: not-allowed;
+    }
+
+    input[type="range"]:disabled::-webkit-slider-thumb {
+      border-color: var(--text-muted);
+    }
+
+    .range-ticks {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* 开关切换按钮 (是否做家务) */
+    .toggle-segment {
+      display: inline-flex;
+      background: var(--bg-subtle);
+      padding: 3px;
+      border-radius: 10px;
+      border: 1px solid var(--border-light);
+    }
+
+    .toggle-btn {
+      border: none;
+      background: transparent;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      border-radius: 7px;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .toggle-btn.active {
+      background: #ffffff;
+      color: var(--brand-rose);
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* 保姆替代成本提示框 */
+    .nanny-notice {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-amber-soft);
+      border: 1px solid #fde68a;
+      font-size: 12px;
+      color: #92400e;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .nanny-notice.visible {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .nanny-link-btn {
+      background: none;
+      border: none;
+      color: #b45309;
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
+      padding: 0 2px;
+      font-size: 12px;
+    }
+
+    /* 折叠的高级调节项 */
+    .advanced-accordion {
+      margin-top: 20px;
+      border-top: 1px dashed var(--border-light);
+      padding-top: 14px;
+    }
+
+    .accordion-trigger {
+      width: 100%;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .accordion-trigger:hover {
+      background: #f1f5f9;
+      color: var(--text-primary);
+    }
+
+    .accordion-arrow {
+      transition: transform 0.25s ease;
+      font-size: 12px;
+    }
+
+    .accordion-trigger[aria-expanded="true"] .accordion-arrow {
+      transform: rotate(180deg);
+    }
+
+    .accordion-panel {
+      display: none;
+      padding-top: 16px;
+    }
+
+    .accordion-panel.open {
+      display: block;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       右侧核心看板与估值卡片
+       ========================================================================== */
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 主推荐聘礼区间英雄卡片 */
+    .hero-valuation-card {
+      background: linear-gradient(135deg, #ffffff 0%, #fff1f2 100%);
+      border: 1px solid #fecdd3;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-top-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .hero-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-rose);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .hero-main-value {
+      font-size: clamp(32px, 5vw, 44px);
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hero-main-value span {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-left: 4px;
+    }
+
+    .hero-sub-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+
+    .risk-badge {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .risk-low { background: var(--bg-emerald-soft); color: #065f46; border: 1px solid #a7f3d0; }
+    .risk-mid { background: var(--bg-amber-soft); color: #92400e; border: 1px solid #fde68a; }
+    .risk-high { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+    /* 三档建议区间 (保守 / 中性 / 乐观) */
+    .tiers-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .tiers-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .tier-box {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 14px;
+      text-align: center;
+      transition: transform var(--transition-fast);
+    }
+
+    .tier-box.featured {
+      background: #ffffff;
+      border: 2px solid var(--brand-rose);
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.1);
+    }
+
+    .tier-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .tier-amount {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tier-box.featured .tier-amount {
+      color: var(--brand-rose);
+    }
+
+    .tier-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* 四项核心现金流KPI小卡片 */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    @media (min-width: 640px) {
+      .kpi-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .kpi-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .kpi-title {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .kpi-value {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* ==========================================================================
+       原生 SVG 数据可视化区域
+       ========================================================================== */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    @media (min-width: 768px) {
+      .charts-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .chart-wrapper {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .svg-container {
+      width: 100%;
+      max-width: 360px;
+      height: 220px;
+      position: relative;
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+
+    /* ==========================================================================
+       底部精算公式说明与免责提示
+       ========================================================================== */
+    .formula-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: var(--radius-lg);
+      padding: 22px 24px;
+      margin-top: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .formula-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    @media (min-width: 768px) {
+      .formula-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .formula-item {
+      background: var(--bg-subtle);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      border-left: 3px solid var(--brand-indigo);
+    }
+
+    .formula-item-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .formula-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: var(--brand-indigo);
+      background: rgba(79, 70, 229, 0.08);
+      padding: 3px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 4px;
+    }
+
+    .formula-desc {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .footer-disclaimer {
+      text-align: center;
+      margin-top: 28px;
+      padding: 16px;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .disclaimer-pill {
+      display: inline-block;
+      background: #ffffff;
+      border: 1px solid var(--border-light);
+      padding: 8px 18px;
+      border-radius: 999px;
+      box-shadow: var(--shadow-sm);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部横幅 -->
+  <header class="header-banner">
+    <div class="header-content">
+      <div class="badge-pill">📊 家庭财务与期望现值精算模型 · 纯本地离线测算</div>
+      <h1 class="header-title">聘礼（彩礼）价值与经济账计算器</h1>
+      <p class="header-subtitle">
+        综合配偶现金流给付、家务劳动替代价值、婚姻存续概率与折现率，用理性精算视角评估婚姻初期的经济平衡点
+      </p>
+    </div>
+  </header>
+
+  <main class="main-container">
+    <!-- 快捷预设场景 -->
+    <section class="preset-bar" aria-label="快捷预设场景">
+      <div class="preset-label">
+        <span>⚡ 快捷情景预设：</span>
+      </div>
+      <div class="preset-buttons" id="presetContainer">
+        <button type="button" class="preset-btn active" data-preset="balanced">⚖️ 标准均衡型</button>
+        <button type="button" class="preset-btn" data-preset="aa">🤝 双职工AA型</button>
+        <button type="button" class="preset-btn" data-preset="homemaker">🏡 传统顾家型</button>
+        <button type="button" class="preset-btn" data-preset="highEarner">💎 高薪上交型</button>
+        <button type="button" class="preset-btn" data-preset="highRisk">🎲 高风险博弈型</button>
+      </div>
+    </section>
+
+    <!-- 主仪表盘双栏 -->
+    <div class="dashboard-grid">
+      <!-- 左侧：参数输入区 -->
+      <section class="card" aria-label="核心参数设置">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span class="card-title-icon" style="background: var(--bg-accent-soft); color: var(--brand-rose);">⚙️</span>
+            核心经济参数设定
+          </h2>
+          <button type="button" id="resetBtn" class="preset-btn" style="padding: 4px 10px; font-size: 12px;">重置默认</button>
+        </div>
+
+        <!-- 1. 配偶税后月收入 -->
+        <div class="control-group">
+          <div class="control-top">
+            <div>
+              <label for="incomeInput" class="control-label">1. 配偶税后月收入</label>
+              <span class="control-hint">扣除五险一金及个税后的实际到手月薪</span>
+            </div>
+            <div class="number-input-wrap">
+              <input type="number" id="incomeInput" class="number-input" min="0" max="100000" step="500" value="10000" />
+              <span class="input-unit">元/月</span>
+            </div>
+          </div>
+          <input type="range" id="incomeRange" min="0" max="100000" step="500" value="10000" />
+          <div class="range-ticks">
+            <span>0元</span>
+            <span>2.5万</span>
+            <span>5万</span>
+            <span>7.5万</span>
+            <span>10万</span>
+          </div>
+        </div>
+
+        <!-- 2. 工资上交/给付比例 -->
+        <div class="control-group">
+          <div class="control-top">
+            <div>
+              <label for="shareRatioInput" class="control-label">2. 工资上交 / 家庭给付比例</label>
+              <span class="control-hint">配偶每月收入中用于共同账户或给付您的比例</span>
+            </div>
+            <div class="number-input-wrap">
+              <input type="number" id="shareRatioInput" class="number-input" min="0" max="100" step="1" value="50" />
+              <span class="input-unit">%</span>
+            </div>
+          </div>
+          <input type="range" id="shareRatioRange" min="0" max="100" step="1" value="50" />
+          <div class="range-ticks">
+            <span>0% (全自留)</span>
+            <span>50% (对半)</span>
+            <span>100% (全上交)</span>
+          </div>
+        </div>
+
+        <!-- 3. 是否愿意做家务 -->
+        <div class="control-group">
+          <div class="control-top">
+            <div>
+              <span class="control-label">3. 配偶是否承担日常家务</span>
+              <span class="control-hint">包含做饭、保洁、洗衣及日常家庭事务打理</span>
+            </div>
+            <div class="toggle-segment" role="group" aria-label="是否愿意做家务">
+              <button type="button" class="toggle-btn active" id="houseworkYesBtn" data-val="true">是 · 承担</button>
+              <button type="button" class="toggle-btn" id="houseworkNoBtn" data-val="false">否 · 不做</button>
+            </div>
+          </div>
+          <!-- 当选择“否”时的保姆替代成本提示 -->
+          <div id="nannyNotice" class="nanny-notice">
+            💡 <strong>家务外包提示：</strong>若双方均不愿做家务，按一二线城市钟点工/保姆市场价约 <strong>120~180 元/天</strong> 估算，5年外包成本高达 21.9万~32.8万元。
+            <button type="button" id="applyNannyCostBtn" class="nanny-link-btn">按需计入保姆替代折算？</button>
+          </div>
+        </div>
+
+        <!-- 4. 做家务每天折算价值 -->
+        <div class="control-group" id="houseworkValueGroup">
+          <div class="control-top">
+            <div>
+              <label for="houseworkValInput" class="control-label">4. 家务劳动每日折算价值</label>
+              <span class="control-hint">参考本地钟点工时薪或家政服务市场公允价值</span>
+            </div>
+            <div class="number-input-wrap">
+              <input type="number" id="houseworkValInput" class="number-input" min="0" max="1000" step="10" value="100" />
+              <span class="input-unit">元/天</span>
+            </div>
+          </div>
+          <input type="range" id="houseworkValRange" min="0" max="1000" step="10" value="100" />
+          <div class="range-ticks">
+            <span>0元</span>
+            <span>250元</span>
+            <span>500元</span>
+            <span>750元</span>
+            <span>1000元</span>
+          </div>
+        </div>
+
+        <!-- 5. 5年内离婚概率 -->
+        <div class="control-group" style="margin-bottom: 8px;">
+          <div class="control-top">
+            <div>
+              <label for="divorceProbInput" class="control-label">5. 5年内婚姻破裂（离婚）概率</label>
+              <span class="control-hint">基于双方磨合度、异地及性格契合度的主观风险评估</span>
+            </div>
+            <div class="number-input-wrap">
+              <input type="number" id="divorceProbInput" class="number-input" min="0" max="100" step="1" value="20" />
+              <span class="input-unit">%</span>
+            </div>
+          </div>
+          <input type="range" id="divorceProbRange" min="0" max="100" step="1" value="20" />
+          <div class="range-ticks">
+            <span>0% (磐石)</span>
+            <span>25%</span>
+            <span>50% (五五开)</span>
+            <span>75%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        <!-- 6. 折叠的高级/附加调节项 -->
+        <div class="advanced-accordion">
+          <button type="button" class="accordion-trigger" id="advancedToggle" aria-expanded="false">
+            <span>🔧 高级精算调节项（评估周期 / 退还比例 / 折现率）</span>
+            <span class="accordion-arrow">▼</span>
+          </button>
+          <div class="accordion-panel" id="advancedPanel">
+            <!-- 评估窗口期 -->
+            <div class="control-group">
+              <div class="control-top">
+                <div>
+                  <label for="yearsInput" class="control-label">测算评估周期（窗口期）</label>
+                  <span class="control-hint">默认按婚后前 5 年关键磨合期测算</span>
+                </div>
+                <div class="number-input-wrap">
+                  <input type="number" id="yearsInput" class="number-input" min="1" max="20" step="1" value="5" />
+                  <span class="input-unit">年</span>
+                </div>
+              </div>
+              <input type="range" id="yearsRange" min="1" max="20" step="1" value="5" />
+            </div>
+
+            <!-- 离婚聘礼返还比例 -->
+            <div class="control-group">
+              <div class="control-top">
+                <div>
+                  <label for="refundRatioInput" class="control-label">离婚时聘礼可退还比例</label>
+                  <span class="control-hint">参考《民法典》彩礼司法解释及当地习俗折旧退还率</span>
+                </div>
+                <div class="number-input-wrap">
+                  <input type="number" id="refundRatioInput" class="number-input" min="0" max="100" step="5" value="50" />
+                  <span class="input-unit">%</span>
+                </div>
+              </div>
+              <input type="range" id="refundRatioRange" min="0" max="100" step="5" value="50" />
+            </div>
+
+            <!-- 年化折现率 / 情绪价值调节 -->
+            <div class="control-group" style="margin-bottom: 0;">
+              <div class="control-top">
+                <div>
+                  <label for="discountRateInput" class="control-label">资金年化折现率（通胀/机会成本）</label>
+                  <span class="control-hint">未来现金流折算为当前一次性聘礼的贴现率</span>
+                </div>
+                <div class="number-input-wrap">
+                  <input type="number" id="discountRateInput" class="number-input" min="0" max="15" step="0.5" value="3" />
+                  <span class="input-unit">%</span>
+                </div>
+              </div>
+              <input type="range" id="discountRateRange" min="0" max="15" step="0.5" value="3" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右侧：实时看板与图表分析 -->
+      <div class="right-column">
+        <!-- 英雄估值卡片 -->
+        <section class="hero-valuation-card" aria-label="合理聘礼上限估值">
+          <div class="hero-top-row">
+            <div>
+              <div class="hero-label">🎯 风险调整后 · 合理聘礼建议上限（期望平衡点）</div>
+              <div class="hero-main-value" id="neutralValuationDisplay">¥ 394,200 <span>元</span></div>
+              <p class="hero-sub-desc" id="heroSummaryText">
+                在 <strong>20%</strong> 离婚风险与 <strong>3.0%</strong> 折现率下，<span id="windowYearsLabel">5</span>年综合期望现值平衡点
+              </p>
+            </div>
+            <div id="riskBadge" class="risk-badge risk-low">🟢 风险可控 · 收益稳健</div>
+          </div>
+
+          <!-- 三档建议区间 -->
+          <div class="tiers-grid">
+            <div class="tier-box">
+              <div class="tier-name">🛡️ 保守估值（纯现金流折现）</div>
+              <div class="tier-amount" id="conservativeValDisplay">¥ 231,400</div>
+              <div class="tier-note">仅计入工资给付，剔除家务折算</div>
+            </div>
+            <div class="tier-box featured">
+              <div class="tier-name">⚖️ 中性合理上限（期望平衡点）</div>
+              <div class="tier-amount" id="balancedValDisplay">¥ 394,200</div>
+              <div class="tier-note">兼顾工资给付、家务价值与离婚退还</div>
+            </div>
+            <div class="tier-box">
+              <div class="tier-name">🌈 乐观估值（无离婚理想满额）</div>
+              <div class="tier-amount" id="optimisticValDisplay">¥ 482,500</div>
+              <div class="tier-note">假设婚姻100%稳固存续满周期</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 四项核心现金流指标 -->
+        <section class="kpi-grid" aria-label="核心现金流明细">
+          <div class="kpi-card">
+            <div class="kpi-title">💵 每年工资现金流入</div>
+            <div class="kpi-value" id="annualCashDisplay">¥ 60,000</div>
+            <div class="kpi-sub" id="monthlyCashSub">月均给付 ¥5,000</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">🧹 每年家务劳动价值</div>
+            <div class="kpi-value" id="annualHouseworkDisplay">¥ 36,500</div>
+            <div class="kpi-sub" id="dailyHouseworkSub">按 100元/天 × 365天</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">📈 5年无离婚总回报</div>
+            <div class="kpi-value" id="grossTotalDisplay">¥ 482,500</div>
+            <div class="kpi-sub">未折现名义总价值</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">⚠️ 离婚风险预期折损</div>
+            <div class="kpi-value" style="color: var(--brand-rose);" id="riskLossDisplay">- ¥ 88,300</div>
+            <div class="kpi-sub">含提前终止与折现损耗</div>
+          </div>
+        </section>
+
+        <!-- 原生 SVG 可视化图表区 -->
+        <section class="charts-grid" aria-label="可视化图表分析">
+          <!-- 图表1：价值构成与风险损耗对比图 -->
+          <div class="card">
+            <div class="card-header" style="margin-bottom: 12px;">
+              <h3 class="card-title">
+                <span class="card-title-icon" style="background: var(--bg-indigo-soft); color: var(--brand-indigo);">📊</span>
+                周期总价值构成拆解
+              </h3>
+            </div>
+            <div class="chart-wrapper">
+              <div class="svg-container" id="breakdownChartContainer"></div>
+              <div class="chart-legend">
+                <span class="legend-item"><i class="legend-dot" style="background: #4f46e5;"></i>工资现金现值</span>
+                <span class="legend-item"><i class="legend-dot" style="background: #10b981;"></i>家务劳动现值</span>
+                <span class="legend-item"><i class="legend-dot" style="background: #fda4af;"></i>风险/折现损耗</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 图表2：不同离婚概率下的聘礼估值敏感度曲线 -->
+          <div class="card">
+            <div class="card-header" style="margin-bottom: 12px;">
+              <h3 class="card-title">
+                <span class="card-title-icon" style="background: var(--bg-emerald-soft); color: var(--brand-emerald);">📉</span>
+                离婚概率敏感度曲线
+              </h3>
+            </div>
+            <div class="chart-wrapper">
+              <div class="svg-container" id="sensitivityChartContainer"></div>
+              <div class="chart-legend">
+                <span class="legend-item"><i class="legend-dot" style="background: #e11d48;"></i>合理聘礼上限曲线</span>
+                <span class="legend-item"><i class="legend-dot" style="background: #0f172a; border-radius: 50%;"></i>当前设定位置</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- 底部精算公式拆解说明卡片 -->
+    <section class="formula-card" aria-label="精算公式拆解说明">
+      <div class="card-header" style="margin-bottom: 8px; border-bottom: none; padding-bottom: 0;">
+        <h3 class="card-title">
+          <span class="card-title-icon" style="background: var(--bg-subtle); color: var(--text-primary);">📐</span>
+          精算模型逻辑与公式拆解说明
+        </h3>
+      </div>
+      <div class="formula-grid">
+        <div class="formula-item">
+          <div class="formula-item-title">1. 年度综合家庭产出 (Annual Value)</div>
+          <div class="formula-code">V_年 = (月收入 × 12 × 给付比例) + (家务日薪 × 365)</div>
+          <p class="formula-desc">将配偶提供的显性现金流与隐性家务劳动统一货币化，衡量每年的家庭净增量价值。</p>
+        </div>
+        <div class="formula-item">
+          <div class="formula-item-title">2. 期望均衡点反推 (Equilibrium Cap)</div>
+          <div class="formula-code">C_上限 = [(1 - P) × PV(T) + P × PV(T/2)] / [1 - P × R_退]</div>
+          <p class="formula-desc">假设离婚平均发生在周期中点 (T/2)，结合离婚概率 P 与彩礼返还率 R_退，求解支付聘礼的期望盈亏平衡上限。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 幽默克制的风险提示 -->
+    <footer class="footer-disclaimer">
+      <div class="disclaimer-pill">
+        🕊️ <strong>理性提示：</strong>感情非买卖，婚姻亦非纯粹的金融博弈。本精算模型仅用于量化家庭经济分工与潜在风险，仅供娱乐与理性参考。
+      </div>
+    </footer>
+  </main>
+
+  <script>
+    /**
+     * 聘礼（彩礼）价值与经济账精算计算器核心逻辑
+     * 纯原生 JS 实现，包含状态管理、财务现值计算及动态 SVG 渲染
+     */
+    (function () {
+      'use strict';
+
+      // 默认参数状态
+      const DEFAULT_STATE = {
+        income: 10000,         // 配偶税后月收入 (元)
+        shareRatio: 50,        // 工资上交/给付比例 (%)
+        doesHousework: true,   // 是否愿意做家务
+        houseworkVal: 100,     // 每日家务折算价值 (元/天)
+        divorceProb: 20,       // 5年内离婚概率 (%)
+        years: 5,              // 测算评估周期 (年)
+        refundRatio: 50,       // 离婚时聘礼可退还比例 (%)
+        discountRate: 3.0      // 年化折现率 (%)
+      };
+
+      // 快捷预设场景配置
+      const PRESETS = {
+        balanced: {
+          income: 10000, shareRatio: 50, doesHousework: true, houseworkVal: 100,
+          divorceProb: 20, years: 5, refundRatio: 50, discountRate: 3.0
+        },
+        aa: {
+          income: 15000, shareRatio: 15, doesHousework: false, houseworkVal: 0,
+          divorceProb: 25, years: 5, refundRatio: 60, discountRate: 3.0
+        },
+        homemaker: {
+          income: 6000, shareRatio: 40, doesHousework: true, houseworkVal: 220,
+          divorceProb: 10, years: 5, refundRatio: 40, discountRate: 2.5
+        },
+        highEarner: {
+          income: 35000, shareRatio: 80, doesHousework: true, houseworkVal: 100,
+          divorceProb: 15, years: 5, refundRatio: 50, discountRate: 3.5
+        },
+        highRisk: {
+          income: 12000, shareRatio: 30, doesHousework: false, houseworkVal: 0,
+          divorceProb: 65, years: 5, refundRatio: 20, discountRate: 4.0
+        }
+      };
+
+      let state = { ...DEFAULT_STATE };
+
+      // DOM 元素引用缓存
+      const els = {
+        incomeInput: document.getElementById('incomeInput'),
+        incomeRange: document.getElementById('incomeRange'),
+        shareRatioInput: document.getElementById('shareRatioInput'),
+        shareRatioRange: document.getElementById('shareRatioRange'),
+        houseworkYesBtn: document.getElementById('houseworkYesBtn'),
+        houseworkNoBtn: document.getElementById('houseworkNoBtn'),
+        houseworkValueGroup: document.getElementById('houseworkValueGroup'),
+        houseworkValInput: document.getElementById('houseworkValInput'),
+        houseworkValRange: document.getElementById('houseworkValRange'),
+        nannyNotice: document.getElementById('nannyNotice'),
+        applyNannyCostBtn: document.getElementById('applyNannyCostBtn'),
+        divorceProbInput: document.getElementById('divorceProbInput'),
+        divorceProbRange: document.getElementById('divorceProbRange'),
+        yearsInput: document.getElementById('yearsInput'),
+        yearsRange: document.getElementById('yearsRange'),
+        refundRatioInput: document.getElementById('refundRatioInput'),
+        refundRatioRange: document.getElementById('refundRatioRange'),
+        discountRateInput: document.getElementById('discountRateInput'),
+        discountRateRange: document.getElementById('discountRateRange'),
+
+        // 折叠面板与预设按钮
+        advancedToggle: document.getElementById('advancedToggle'),
+        advancedPanel: document.getElementById('advancedPanel'),
+        presetContainer: document.getElementById('presetContainer'),
+        resetBtn: document.getElementById('resetBtn'),
+
+        // 看板输出元素
+        neutralValuationDisplay: document.getElementById('neutralValuationDisplay'),
+        heroSummaryText: document.getElementById('heroSummaryText'),
+        riskBadge: document.getElementById('riskBadge'),
+        conservativeValDisplay: document.getElementById('conservativeValDisplay'),
+        balancedValDisplay: document.getElementById('balancedValDisplay'),
+        optimisticValDisplay: document.getElementById('optimisticValDisplay'),
+
+        annualCashDisplay: document.getElementById('annualCashDisplay'),
+        monthlyCashSub: document.getElementById('monthlyCashSub'),
+        annualHouseworkDisplay: document.getElementById('annualHouseworkDisplay'),
+        dailyHouseworkSub: document.getElementById('dailyHouseworkSub'),
+        grossTotalDisplay: document.getElementById('grossTotalDisplay'),
+        riskLossDisplay: document.getElementById('riskLossDisplay'),
+
+        // 图表容器
+        breakdownChartContainer: document.getElementById('breakdownChartContainer'),
+        sensitivityChartContainer: document.getElementById('sensitivityChartContainer')
+      };
+
+      /**
+       * 货币格式化辅助函数
+       */
+      function formatCurrency(num) {
+        const val = Math.round(num);
+        return '¥ ' + val.toLocaleString('zh-CN');
+      }
+
+      function formatWan(num) {
+        if (Math.abs(num) >= 10000) {
+          return (num / 10000).toFixed(1) + '万';
+        }
+        return Math.round(num).toLocaleString('zh-CN');
+      }
+
+      /**
+       * 计算年金现值因子 PV Factor = [1 - (1 + r)^(-n)] / r
+       * 支持小数年数（如离婚发生在窗口期中点 T/2）
+       */
+      function calcAnnuityPV(annualFlow, ratePercent, years) {
+        if (years <= 0 || annualFlow <= 0) return 0;
+        const r = ratePercent / 100;
+        if (r === 0) {
+          return annualFlow * years;
+        }
+        return annualFlow * ((1 - Math.pow(1 + r, -years)) / r);
+      }
+
+      /**
+       * 核心精算引擎：给定一组参数和指定离婚概率，计算合理聘礼上限与分项现值
+       */
+      function calculateMetrics(params, overrideDivorceProb = null) {
+        const p = (overrideDivorceProb !== null ? overrideDivorceProb : params.divorceProb) / 100;
+        const refundRate = params.refundRatio / 100;
+        const T = params.years;
+        const r = params.discountRate;
+
+        // 1. 年度现金流入与年度家务价值
+        const monthlyCash = params.income * (params.shareRatio / 100);
+        const annualCash = monthlyCash * 12;
+        const effectiveDailyHousework = params.doesHousework ? params.houseworkVal : 0;
+        const annualHousework = effectiveDailyHousework * 365;
+        const annualTotal = annualCash + annualHousework;
+
+        // 2. 无离婚理想情况下的总名义回报与现值
+        const grossNominalTotal = annualTotal * T;
+        const pvCashFull = calcAnnuityPV(annualCash, r, T);
+        const pvHouseworkFull = calcAnnuityPV(annualHousework, r, T);
+        const pvTotalFull = pvCashFull + pvHouseworkFull;
+
+        // 3. 发生离婚时的平均存续期现值 (假设平均存续时间为 T / 2 年)
+        const halfT = T / 2;
+        const pvCashHalf = calcAnnuityPV(annualCash, r, halfT);
+        const pvHouseworkHalf = calcAnnuityPV(annualHousework, r, halfT);
+        const pvTotalHalf = pvCashHalf + pvHouseworkHalf;
+
+        // 4. 期望产出现值 E[PV_Benefit] = (1 - P) * PV(T) + P * PV(T/2)
+        const expectedCashPV = (1 - p) * pvCashFull + p * pvCashHalf;
+        const expectedHouseworkPV = (1 - p) * pvHouseworkFull + p * pvHouseworkHalf;
+        const expectedTotalBenefitPV = expectedCashPV + expectedHouseworkPV;
+
+        // 5. 期望均衡聘礼上限求解：
+        // 支付聘礼 C 的期望净成本 = C * (1 - P * refundRate / (1 + r)^(T/2))
+        // 令期望净成本 = 期望产出现值，反解 C
+        const discountedRefundRate = refundRate / Math.pow(1 + r / 100, halfT);
+        const denominator = Math.max(0.15, 1 - p * discountedRefundRate); // 防止分母过小导致极端发散
+
+        const balancedCap = expectedTotalBenefitPV / denominator;
+        const conservativeCap = expectedCashPV / denominator; // 仅计算现金流给付的保守上限
+        const optimisticCap = grossNominalTotal; // 满分无风险名义总回报
+
+        // 风险与折现综合折损额（相对于无风险名义总回报）
+        const totalLoss = Math.max(0, grossNominalTotal - expectedTotalBenefitPV);
+
+        return {
+          monthlyCash,
+          annualCash,
+          effectiveDailyHousework,
+          annualHousework,
+          annualTotal,
+          grossNominalTotal,
+          expectedCashPV,
+          expectedHouseworkPV,
+          expectedTotalBenefitPV,
+          balancedCap,
+          conservativeCap,
+          optimisticCap,
+          totalLoss
+        };
+      }
+
+      /**
+       * 同步所有输入控件的 UI 状态
+       */
+      function syncInputsFromState() {
+        els.incomeInput.value = state.income;
+        els.incomeRange.value = state.income;
+
+        els.shareRatioInput.value = state.shareRatio;
+        els.shareRatioRange.value = state.shareRatio;
+
+        els.houseworkValInput.value = state.houseworkVal;
+        els.houseworkValRange.value = state.houseworkVal;
+
+        els.divorceProbInput.value = state.divorceProb;
+        els.divorceProbRange.value = state.divorceProb;
+
+        els.yearsInput.value = state.years;
+        els.yearsRange.value = state.years;
+
+        els.refundRatioInput.value = state.refundRatio;
+        els.refundRatioRange.value = state.refundRatio;
+
+        els.discountRateInput.value = state.discountRate;
+        els.discountRateRange.value = state.discountRate;
+
+        // 切换家务开关样式与禁用状态
+        if (state.doesHousework) {
+          els.houseworkYesBtn.classList.add('active');
+          els.houseworkNoBtn.classList.remove('active');
+          els.houseworkValueGroup.classList.remove('disabled-state');
+          els.houseworkValInput.disabled = false;
+          els.houseworkValRange.disabled = false;
+          els.nannyNotice.classList.remove('visible');
+        } else {
+          els.houseworkNoBtn.classList.add('active');
+          els.houseworkYesBtn.classList.remove('active');
+          els.houseworkValueGroup.classList.add('disabled-state');
+          els.houseworkValInput.disabled = true;
+          els.houseworkValRange.disabled = true;
+          els.nannyNotice.classList.add('visible');
+        }
+      }
+
+      /**
+       * 绘制图表 1：周期总价值构成堆叠柱状对比图 (原生 SVG)
+       */
+      function renderBreakdownSVG(metrics) {
+        const width = 340;
+        const height = 210;
+        const padLeft = 48;
+        const padRight = 20;
+        const padTop = 24;
+        const padBottom = 34;
+        const plotW = width - padLeft - padRight;
+        const plotH = height - padTop - padBottom;
+
+        const maxVal = Math.max(metrics.grossNominalTotal, metrics.balancedCap, 10000);
+
+        const yScale = (val) => padTop + plotH - (val / maxVal) * plotH;
+
+        // 两根柱子：左柱为“无风险名义总价值”，右柱为“风险调整后期望构成”
+        const barW = 58;
+        const x1 = padLeft + plotW * 0.25 - barW / 2;
+        const x2 = padLeft + plotW * 0.72 - barW / 2;
+
+        // 左柱高度
+        const h1 = (metrics.grossNominalTotal / maxVal) * plotH;
+        const y1 = padTop + plotH - h1;
+
+        // 右柱三段堆叠：现金现值 + 家务现值 + 风险折现损耗
+        const hCash = (metrics.expectedCashPV / maxVal) * plotH;
+        const hHouse = (metrics.expectedHouseworkPV / maxVal) * plotH;
+        const hLoss = (metrics.totalLoss / maxVal) * plotH;
+
+        const yCash = padTop + plotH - hCash;
+        const yHouse = yCash - hHouse;
+        const yLoss = yHouse - hLoss;
+
+        // Y轴刻度线
+        const ticks = [0, 0.5, 1];
+        let gridLines = '';
+        ticks.forEach(t => {
+          const val = maxVal * t;
+          const y = yScale(val);
+          gridLines += `
+            <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="#e2e8f0" stroke-dasharray="3,3" />
+            <text x="${padLeft - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="#94a3b8">${formatWan(val)}</text>
+          `;
+        });
+
+        const svg = `
+          <svg viewBox="0 0 ${width} ${height}" width="100%" height="100%" role="img" aria-label="周期总价值构成拆解图">
+            ${gridLines}
+            <!-- 左柱：理想名义总回报 -->
+            <rect x="${x1}" y="${y1}" width="${barW}" height="${Math.max(0, h1)}" rx="6" fill="#cbd5e1" />
+            <text x="${x1 + barW / 2}" y="${y1 - 6}" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">
+              ${formatWan(metrics.grossNominalTotal)}
+            </text>
+            <text x="${x1 + barW / 2}" y="${height - 10}" text-anchor="middle" font-size="11" font-weight="600" fill="#475569">
+              理想满额回报
+            </text>
+
+            <!-- 右柱：风险调整构成 -->
+            <!-- 1. 风险/折现损耗 (顶部) -->
+            <rect x="${x2}" y="${yLoss}" width="${barW}" height="${Math.max(0, hLoss)}" rx="4" fill="#fda4af" />
+            <!-- 2. 家务劳动现值 (中部) -->
+            <rect x="${x2}" y="${yHouse}" width="${barW}" height="${Math.max(0, hHouse)}" fill="#10b981" />
+            <!-- 3. 工资现金现值 (底部) -->
+            <rect x="${x2}" y="${yCash}" width="${barW}" height="${Math.max(0, hCash)}" fill="#4f46e5" />
+
+            <text x="${x2 + barW / 2}" y="${yHouse - 6}" text-anchor="middle" font-size="11" font-weight="700" fill="#0f172a">
+              ${formatWan(metrics.expectedTotalBenefitPV)}
+            </text>
+            <text x="${x2 + barW / 2}" y="${height - 10}" text-anchor="middle" font-size="11" font-weight="600" fill="#0f172a">
+              期望有效现值
+            </text>
+          </svg>
+        `;
+
+        els.breakdownChartContainer.innerHTML = svg;
+      }
+
+      /**
+       * 绘制图表 2：不同离婚概率下的聘礼估值敏感度曲线 (原生 SVG)
+       */
+      function renderSensitivitySVG(currentMetrics) {
+        const width = 340;
+        const height = 210;
+        const padLeft = 48;
+        const padRight = 20;
+        const padTop = 24;
+        const padBottom = 34;
+        const plotW = width - padLeft - padRight;
+        const plotH = height - padTop - padBottom;
+
+        // 采样 0% 到 100% 离婚概率下的估值点
+        const sampleProbs = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+        const points = sampleProbs.map(prob => {
+          const m = calculateMetrics(state, prob);
+          return { prob, val: m.balancedCap };
+        });
+
+        const maxVal = Math.max(...points.map(p => p.val), 10000);
+        const minVal = 0;
+
+        const xScale = (prob) => padLeft + (prob / 100) * plotW;
+        const yScale = (val) => padTop + plotH - ((val - minVal) / (maxVal - minVal)) * plotH;
+
+        // 构建折线路径与渐变填充区域路径
+        const lineCoords = points.map(pt => `${xScale(pt.prob).toFixed(1)},${yScale(pt.val).toFixed(1)}`);
+        const polylinePoints = lineCoords.join(' ');
+        const areaPath = `M ${xScale(0)},${padTop + plotH} L ${lineCoords.join(' L ')} L ${xScale(100)},${padTop + plotH} Z`;
+
+        // 当前用户设定的点坐标
+        const curX = xScale(state.divorceProb);
+        const curY = yScale(currentMetrics.balancedCap);
+
+        // Y轴与X轴辅助线
+        let gridHTML = '';
+        [0, 0.5, 1].forEach(t => {
+          const v = maxVal * t;
+          const y = yScale(v);
+          gridHTML += `
+            <line x1="${padLeft}" y1="${y}" x2="${width - padRight}" y2="${y}" stroke="#e2e8f0" stroke-dasharray="3,3" />
+            <text x="${padLeft - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="#94a3b8">${formatWan(v)}</text>
+          `;
+        });
+
+        [0, 25, 50, 75, 100].forEach(p => {
+          const x = xScale(p);
+          gridHTML += `
+            <text x="${x}" y="${height - 10}" text-anchor="middle" font-size="10" fill="#94a3b8">${p}%</text>
+          `;
+        });
+
+        const svg = `
+          <svg viewBox="0 0 ${width} ${height}" width="100%" height="100%" role="img" aria-label="离婚概率敏感度曲线图">
+            <defs>
+              <linearGradient id="roseAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#e11d48" stop-opacity="0.22" />
+                <stop offset="100%" stop-color="#e11d48" stop-opacity="0.01" />
+              </linearGradient>
+            </defs>
+            ${gridHTML}
+            <!-- 渐变面积 -->
+            <path d="${areaPath}" fill="url(#roseAreaGrad)" />
+            <!-- 敏感度曲线 -->
+            <polyline fill="none" stroke="#e11d48" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${polylinePoints}" />
+            <!-- 当前点垂直虚线 -->
+            <line x1="${curX}" y1="${curY}" x2="${curX}" y2="${padTop + plotH}" stroke="#0f172a" stroke-width="1" stroke-dasharray="3,2" />
+            <!-- 当前点高亮圆圈 -->
+            <circle cx="${curX}" cy="${curY}" r="5" fill="#0f172a" stroke="#ffffff" stroke-width="2" />
+            <!-- 当前点数值标签 -->
+            <rect x="${Math.min(width - 68, Math.max(padLeft, curX - 30))}" y="${Math.max(4, curY - 24)}" width="60" height="18" rx="4" fill="#0f172a" />
+            <text x="${Math.min(width - 38, Math.max(padLeft + 30, curX))}" y="${Math.max(16, curY - 12)}" text-anchor="middle" font-size="10" font-weight="700" fill="#ffffff">
+              ${formatWan(currentMetrics.balancedCap)}
+            </text>
+          </svg>
+        `;
+
+        els.sensitivityChartContainer.innerHTML = svg;
+      }
+
+      /**
+       * 刷新所有视图与计算结果
+       */
+      function updateDashboard() {
+        const metrics = calculateMetrics(state);
+
+        // 更新英雄主估值与三档区间
+        els.neutralValuationDisplay.innerHTML = `${formatCurrency(metrics.balancedCap)} <span>元</span>`;
+        els.heroSummaryText.innerHTML = `在 <strong>${state.divorceProb}%</strong> 离婚风险与 <strong>${state.discountRate}%</strong> 折现率下，${state.years}年综合期望现值平衡点`;
+
+        els.conservativeValDisplay.textContent = formatCurrency(metrics.conservativeCap);
+        els.balancedValDisplay.textContent = formatCurrency(metrics.balancedCap);
+        els.optimisticValDisplay.textContent = formatCurrency(metrics.optimisticCap);
+
+        // 更新风险状态徽章
+        if (state.divorceProb <= 20) {
+          els.riskBadge.className = 'risk-badge risk-low';
+          els.riskBadge.textContent = '🟢 风险较低 · 契合度高';
+        } else if (state.divorceProb <= 45) {
+          els.riskBadge.className = 'risk-badge risk-mid';
+          els.riskBadge.textContent = '🟡 中等博弈 · 需留安全垫';
+        } else {
+          els.riskBadge.className = 'risk-badge risk-high';
+          els.riskBadge.textContent = '🔴 高风险预警 · 慎防折损';
+        }
+
+        // 更新四项 KPI 卡片
+        els.annualCashDisplay.textContent = formatCurrency(metrics.annualCash);
+        els.monthlyCashSub.textContent = `月均给付 ${formatCurrency(metrics.monthlyCash)}`;
+
+        els.annualHouseworkDisplay.textContent = formatCurrency(metrics.annualHousework);
+        els.dailyHouseworkSub.textContent = state.doesHousework
+          ? `按 ${state.houseworkVal}元/天 × 365天`
+          : '已选择不做家务 (计0元)';
+
+        els.grossTotalDisplay.textContent = formatCurrency(metrics.grossNominalTotal);
+        els.riskLossDisplay.textContent = '- ' + formatCurrency(metrics.totalLoss);
+
+        // 重绘原生 SVG 图表
+        renderBreakdownSVG(metrics);
+        renderSensitivitySVG(metrics);
+      }
+
+      /**
+       * 绑定滑动条与数字输入框双向联动
+       */
+      function bindRangeAndNumber(rangeEl, numberEl, key, min, max) {
+        const handleInput = (rawVal) => {
+          let val = parseFloat(rawVal);
+          if (isNaN(val)) val = min;
+          val = Math.max(min, Math.min(max, val));
+          state[key] = val;
+          rangeEl.value = val;
+          // 清除预设激活状态
+          clearPresetActive();
+          updateDashboard();
+        };
+
+        rangeEl.addEventListener('input', (e) => {
+          numberEl.value = e.target.value;
+          handleInput(e.target.value);
+        });
+
+        numberEl.addEventListener('input', (e) => {
+          handleInput(e.target.value);
+        });
+
+        numberEl.addEventListener('blur', (e) => {
+          numberEl.value = state[key];
+        });
+      }
+
+      function clearPresetActive() {
+        els.presetContainer.querySelectorAll('.preset-btn').forEach(btn => {
+          btn.classList.remove('active');
+        });
+      }
+
+      /**
+       * 初始化所有事件监听
+       */
+      function initEvents() {
+        bindRangeAndNumber(els.incomeRange, els.incomeInput, 'income', 0, 100000);
+        bindRangeAndNumber(els.shareRatioRange, els.shareRatioInput, 'shareRatio', 0, 100);
+        bindRangeAndNumber(els.houseworkValRange, els.houseworkValInput, 'houseworkVal', 0, 1000);
+        bindRangeAndNumber(els.divorceProbRange, els.divorceProbInput, 'divorceProb', 0, 100);
+        bindRangeAndNumber(els.yearsRange, els.yearsInput, 'years', 1, 20);
+        bindRangeAndNumber(els.refundRatioRange, els.refundRatioInput, 'refundRatio', 0, 100);
+        bindRangeAndNumber(els.discountRateRange, els.discountRateInput, 'discountRate', 0, 15);
+
+        // 是否做家务开关
+        els.houseworkYesBtn.addEventListener('click', () => {
+          state.doesHousework = true;
+          if (state.houseworkVal === 0) state.houseworkVal = 100;
+          clearPresetActive();
+          syncInputsFromState();
+          updateDashboard();
+        });
+
+        els.houseworkNoBtn.addEventListener('click', () => {
+          state.doesHousework = false;
+          clearPresetActive();
+          syncInputsFromState();
+          updateDashboard();
+        });
+
+        // 保姆替代成本一键启用按钮
+        els.applyNannyCostBtn.addEventListener('click', () => {
+          state.doesHousework = true;
+          state.houseworkVal = 150;
+          clearPresetActive();
+          syncInputsFromState();
+          updateDashboard();
+        });
+
+        // 高级选项折叠开关
+        els.advancedToggle.addEventListener('click', () => {
+          const isExpanded = els.advancedToggle.getAttribute('aria-expanded') === 'true';
+          els.advancedToggle.setAttribute('aria-expanded', String(!isExpanded));
+          els.advancedPanel.classList.toggle('open', !isExpanded);
+        });
+
+        // 预设场景切换
+        els.presetContainer.addEventListener('click', (e) => {
+          const btn = e.target.closest('.preset-btn');
+          if (!btn) return;
+          const presetKey = btn.getAttribute('data-preset');
+          if (!PRESETS[presetKey]) return;
+
+          clearPresetActive();
+          btn.classList.add('active');
+
+          state = { ...PRESETS[presetKey] };
+          syncInputsFromState();
+          updateDashboard();
+        });
+
+        // 重置默认按钮
+        els.resetBtn.addEventListener('click', () => {
+          state = { ...DEFAULT_STATE };
+          clearPresetActive();
+          const defaultBtn = els.presetContainer.querySelector('[data-preset="balanced"]');
+          if (defaultBtn) defaultBtn.classList.add('active');
+          syncInputsFromState();
+          updateDashboard();
+        });
+      }
+
+      // 启动应用
+      initEvents();
+      syncInputsFromState();
+      updateDashboard();
+    })();
+  </script>
+</body>
+</html>

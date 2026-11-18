@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>聘礼计算器</title>
+<style>
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+    padding: 30px 15px;
+    font-family: -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg,#fff1e8,#fce4ec);
+    color: #39302e;
+}
+.container {
+    max-width: 680px;
+    margin: auto;
+    background: white;
+    border-radius: 22px;
+    padding: 30px;
+    box-shadow: 0 12px 40px rgba(120,60,60,.12);
+}
+h1 {
+    text-align: center;
+    color: #b33b42;
+    margin-bottom: 8px;
+}
+.subtitle {
+    text-align: center;
+    color: #999;
+    font-size: 13px;
+    margin-bottom: 30px;
+}
+.section {
+    margin-bottom: 25px;
+}
+.section h3 {
+    font-size: 16px;
+    color: #b33b42;
+    border-bottom: 1px solid #f4dddd;
+    padding-bottom: 10px;
+}
+.field {
+    margin: 18px 0;
+}
+label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 9px;
+}
+input[type="number"] {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e5d5d5;
+    border-radius: 9px;
+    font-size: 15px;
+}
+input[type="range"] {
+    width: 100%;
+    accent-color: #c54b52;
+}
+.value {
+    color: #c54b52;
+    font-weight: bold;
+}
+select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #e5d5d5;
+    border-radius: 9px;
+    background: white;
+}
+.result {
+    margin-top: 30px;
+    padding: 25px;
+    text-align: center;
+    border-radius: 16px;
+    background: linear-gradient(135deg,#b83c43,#e77d75);
+    color: white;
+}
+.result small {
+    opacity: .85;
+}
+.amount {
+    font-size: 38px;
+    font-weight: bold;
+    margin: 12px 0;
+}
+.details {
+    margin-top: 20px;
+    padding: 18px;
+    background: #fff8f5;
+    border-radius: 12px;
+    line-height: 2;
+    font-size: 14px;
+}
+button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 10px;
+    background: #b83c43;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 18px;
+}
+button:hover {
+    background: #982f36;
+}
+.note {
+    margin-top: 20px;
+    font-size: 12px;
+    color: #999;
+    line-height: 1.7;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h1>❤️ 聘礼计算器</h1>
+<div class="subtitle">
+综合收入、家庭贡献、家务劳动及婚姻风险的参考模型
+</div>
+
+<div class="section">
+<h3>一、经济贡献</h3>
+
+<div class="field">
+<label>配偶年收入（元）</label>
+<input type="number" id="income" value="200000" min="0">
+</div>
+
+<div class="field">
+<label>
+工资给付比例
+<span class="value" id="ratioText">50%</span>
+</label>
+<input type="range" id="ratio" min="0" max="100"
+value="50" oninput="update()">
+</div>
+</div>
+
+<div class="section">
+<h3>二、家务劳动</h3>
+
+<div class="field">
+<label>是否承担家务</label>
+<select id="chores" onchange="update()">
+<option value="yes">是，承担家务</option>
+<option value="no">否，不承担家务</option>
+</select>
+</div>
+
+<div class="field">
+<label>家务每日价值（元）</label>
+<input type="number" id="daily" value="100" min="0">
+</div>
+</div>
+
+<div class="section">
+<h3>三、婚姻风险</h3>
+
+<div class="field">
+<label>
+未来5年内离婚概率
+<span class="value" id="riskText">20%</span>
+</label>
+<input type="range" id="risk" min="0" max="100"
+value="20" oninput="update()">
+</div>
+</div>
+
+<div class="section">
+<h3>四、聘礼计算规则</h3>
+
+<div class="field">
+<label>基础聘礼金额（元）</label>
+<input type="number" id="base" value="88888" min="0">
+</div>
+
+<div class="field">
+<label>
+家庭贡献折算系数
+<span class="value" id="factorText">10%</span>
+</label>
+<input type="range" id="factor" min="0" max="100"
+value="10" oninput="update()">
+</div>
+</div>
+
+<div class="result">
+<small>综合计算参考聘礼金额</small>
+<div class="amount" id="total">¥ 0</div>
+<small>仅供双方协商参考</small>
+</div>
+
+<div class="details" id="details">
+正在计算...
+</div>
+
+<button onclick="calculate()">重新计算</button>
+
+<div class="note">
+计算说明：本工具为娱乐性、讨论性财务模型。
+五年预期贡献 = 五年经济贡献与家务贡献 × (1 - 五年离婚概率)。
+参考聘礼 = 基础聘礼 + 五年预期贡献 × 折算系数。
+家务劳动按365天/年估算。
+计算结果不代表任何人的真实价值，也不构成法律或婚姻建议。
+</div>
+
+</div>
+
+<script>
+function update() {
+    document.getElementById("ratioText").innerText =
+        document.getElementById("ratio").value + "%";
+
+    document.getElementById("riskText").innerText =
+        document.getElementById("risk").value + "%";
+
+    document.getElementById("factorText").innerText =
+        document.getElementById("factor").value + "%";
+
+    calculate();
+}
+
+function calculate() {
+    const income = Math.max(0,
+        Number(document.getElementById("income").value) || 0);
+
+    const ratio = Number(document.getElementById("ratio").value) / 100;
+
+    const chores = document.getElementById("chores").value;
+
+    const daily = Math.max(0,
+        Number(document.getElementById("daily").value) || 0);
+
+    const risk = Number(document.getElementById("risk").value) / 100;
+
+    const base = Math.max(0,
+        Number(document.getElementById("base").value) || 0);
+
+    const factor = Number(document.getElementById("factor").value) / 100;
+
+    // 年度经济贡献
+    const yearlyIncome = income * ratio;
+
+    // 年度家务贡献
+    const yearlyChores =
+        chores === "yes" ? daily * 365 : 0;
+
+    // 五年总贡献
+    const fiveYearContribution =
+        (yearlyIncome + yearlyChores) * 5;
+
+    // 按离婚概率调整
+    const expectedContribution =
+        fiveYearContribution * (1 - risk);
+
+    // 最终参考聘礼
+    const total = base + expectedContribution * factor;
+
+    const money = n => "¥ " + n.toLocaleString(
+        "zh-CN", {maximumFractionDigits: 0});
+
+    document.getElementById("total").innerText = money(total);
+
+    document.getElementById("details").innerHTML = `
+        <b>📊 计算明细</b><br>
+        年度工资家庭贡献：${money(yearlyIncome)}<br>
+        年度家务劳动价值：${money(yearlyChores)}<br>
+        五年累计贡献：${money(fiveYearContribution)}<br>
+        五年离婚风险调整：${(risk * 100).toFixed(0)}%<br>
+        风险调整后预期贡献：${money(expectedContribution)}<br>
+        基础聘礼：${money(base)}<br>
+        贡献折算金额：${money(expectedContribution * factor)}<br>
+        <hr>
+        <b>最终参考金额：${money(total)}</b>
+    `;
+}
+
+update();
+</script>
+
+</body>
+</html>
